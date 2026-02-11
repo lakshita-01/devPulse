@@ -20,7 +20,7 @@ from enum import Enum
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-allow_origins=["https://your-app.vercel.app", "http://localhost:3000"]
+allow_origins=["https://dev-pulse-orcin.vercel.app/", "http://localhost:3000"]
 
 # MongoDB connection with fallback
 try:
