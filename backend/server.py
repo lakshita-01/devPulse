@@ -15,6 +15,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from bson import ObjectId
 import json
+import secrets
 from enum import Enum
 
 ROOT_DIR = Path(__file__).parent
@@ -197,6 +198,18 @@ class WebhookEvent(BaseModel):
     event: str
     data: Dict[str, Any]
     secret: Optional[str] = None
+
+class InviteCreate(BaseModel):
+    workspace_id: str
+    email: Optional[EmailStr] = None
+
+class InviteResponse(BaseModel):
+    id: str
+    workspace_id: str
+    token: str
+    email: Optional[str] = None
+    created_at: datetime
+    expires_at: datetime
 
 # Helper functions
 def verify_password(plain_password, hashed_password):
@@ -463,6 +476,90 @@ async def invite_member(workspace_id: str, email: str, user: dict = Depends(get_
         "name": invited_user["name"],
         "email": invited_user["email"]
     }}
+
+# Create workspace invite (admin only)
+@api_router.post("/workspaces/{workspace_id}/invites", response_model=InviteResponse)
+async def create_workspace_invite(workspace_id: str, invite_data: InviteCreate, user: dict = Depends(get_current_user)):
+    await verify_workspace_access(user, workspace_id, required_role=Role.ADMIN)
+    
+    token = secrets.token_urlsafe(32)
+    invite_id = str(ObjectId())
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(days=7)
+    
+    invite_doc = {
+        "id": invite_id,
+        "workspace_id": workspace_id,
+        "token": token,
+        "email": invite_data.email,
+        "created_at": now.isoformat(),
+        "expires_at": expires_at.isoformat(),
+        "created_by": user["id"]
+    }
+    
+    await db.invites.insert_one(invite_doc)
+    
+    return InviteResponse(
+        id=invite_id,
+        workspace_id=workspace_id,
+        token=token,
+        email=invite_data.email,
+        created_at=now,
+        expires_at=expires_at
+    )
+
+# Get invite details
+@api_router.get("/invites/{token}")
+async def get_invite_details(token: str):
+    invite = await db.invites.find_one({"token": token}, {"_id": 0})
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    
+    expires_at = datetime.fromisoformat(invite["expires_at"])
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invite expired")
+    
+    workspace = await db.workspaces.find_one({"id": invite["workspace_id"]}, {"_id": 0})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    return {
+        "workspace_name": workspace["name"],
+        "email": invite.get("email"),
+        "expires_at": invite["expires_at"]
+    }
+
+# Accept invite
+@api_router.post("/invites/{token}/accept")
+async def accept_invite(token: str, user: dict = Depends(get_current_user)):
+    invite = await db.invites.find_one({"token": token}, {"_id": 0})
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    
+    expires_at = datetime.fromisoformat(invite["expires_at"])
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invite expired")
+    
+    workspace_id = invite["workspace_id"]
+    
+    # Check if already a member
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if any(m["user_id"] == user["id"] for m in workspace.get("members", []) if m["user_id"] == user["id"]):
+        return {"message": "You are already a member of this workspace"}
+    
+    # Add member to workspace
+    await db.workspaces.update_one(
+        {"id": workspace_id},
+        {"$push": {"members": {"user_id": user["id"], "role": "member"}}}
+    )
+    
+    # Add workspace to user
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$push": {"workspaces": workspace_id}}
+    )
+    
+    return {"message": "Successfully joined workspace", "workspace_id": workspace_id}
 
 # Project routes
 @api_router.get("/projects/{workspace_id}", response_model=List[ProjectResponse])
