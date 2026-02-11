@@ -734,16 +734,17 @@ async def websocket_endpoint(websocket: WebSocket, workspace_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, workspace_id)
 
-# Include router
-app.include_router(api_router)
-
+# Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
     allow_credentials=True,
-    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include router
+app.include_router(api_router)
 
 logging.basicConfig(
     level=logging.INFO,
