@@ -21,12 +21,16 @@ from enum import Enum
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-allow_origins=["https://dev-pulse-orcin.vercel.app/", "http://localhost:3000"]
+allow_origins=["https://dev-pulse-orcin.vercel.app", "http://localhost:3000", "http://localhost:5173"]
 
 # MongoDB connection with fallback
 try:
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-    client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+    # Use tlsAllowInvalidCertificates=True to avoid SSL handshake issues on some environments
+    if "mongodb+srv" in mongo_url:
+        client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000, tlsAllowInvalidCertificates=True)
+    else:
+        client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
     db = client[os.environ.get('DB_NAME', 'devpulse')]
     print(f"[INFO] Connecting to MongoDB: {mongo_url}")
 except Exception as e:
@@ -834,7 +838,7 @@ async def websocket_endpoint(websocket: WebSocket, workspace_id: str):
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
