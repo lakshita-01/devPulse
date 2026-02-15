@@ -37,14 +37,22 @@ try:
     # Use tlsAllowInvalidCertificates=True to avoid SSL handshake issues on some environments
     if "mongodb+srv" in mongo_url:
         import certifi
+        # For local development with SSL issues, we use these parameters to be as compatible as possible.
+        # The TLSV1_ALERT_INTERNAL_ERROR is a common issue with Atlas and certain Python/OpenSSL versions.
         client = AsyncIOMotorClient(
             mongo_url, 
             serverSelectionTimeoutMS=5000, 
-            tlsAllowInvalidCertificates=True,
             tls=True,
-            tlsCAFile=certifi.where()
+            tlsAllowInvalidCertificates=True,
+            tlsCAFile=certifi.where(),
+            connectTimeoutMS=10000,
+            socketTimeoutMS=10000,
+            retryWrites=True,
+            # This can help with some handshake issues
+            appname="devpulse"
         )
     else:
+        # Local MongoDB usually doesn't need TLS
         client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
     
     db = client[db_name]
