@@ -142,7 +142,7 @@ const Dashboard = () => {
         backgroundColor: [
           'hsl(220, 13%, 69%)',
           'hsl(217, 91%, 60%)',
-          'hsl(38, 92%, 50%)',
+          'hsl(239, 84%, 67%)',
           'hsl(142, 71%, 45%)',
         ],
         borderWidth: 0,
@@ -250,7 +250,7 @@ const Dashboard = () => {
           icon={AlertCircle}
           label="Pending Review"
           value={analytics?.tasks_by_status?.review || 0}
-          color="bg-gradient-to-br from-amber-500 to-amber-600"
+          color="bg-gradient-to-br from-indigo-500 to-indigo-600"
         />
         <StatCard
           icon={Zap}

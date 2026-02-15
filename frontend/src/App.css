@@ -9,8 +9,8 @@
   --secondary: 177 198 204;  /* Teal/Cyan */
   --secondary-foreground: 15 23 42;
   
-  --accent: 255 183 77;  /* Warm Orange */
-  --accent-foreground: 15 23 42;
+  --accent: 99 102 241;  /* Indigo 500 */
+  --accent-foreground: 255 255 255;
   
   --muted: 241 245 249;
   --muted-foreground: 100 116 139;
@@ -41,8 +41,8 @@
   --secondary: 94 234 212;
   --secondary-foreground: 15 23 42;
   
-  --accent: 251 191 36;
-  --accent-foreground: 15 23 42;
+  --accent: 129 140 248;  /* Indigo 400 */
+  --accent-foreground: 255 255 255;
   
   --muted: 30 41 59;
   --muted-foreground: 148 163 184;
@@ -81,7 +81,7 @@ body {
 }
 
 .status-review {
-  @apply bg-amber-100 text-amber-700;
+  @apply bg-indigo-100 text-indigo-700;
 }
 
 .status-done {
@@ -97,7 +97,7 @@ body {
 }
 
 .priority-high {
-  @apply text-orange-500;
+  @apply text-indigo-500;
 }
 
 .priority-urgent {

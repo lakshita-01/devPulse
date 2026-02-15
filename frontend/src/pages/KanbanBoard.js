@@ -39,14 +39,14 @@ import { Badge } from '../components/ui/badge';
 const statusColumns = [
   { id: 'todo', label: 'To Do', color: 'bg-slate-100' },
   { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100' },
-  { id: 'review', label: 'Review', color: 'bg-amber-100' },
+  { id: 'review', label: 'Review', color: 'bg-indigo-100' },
   { id: 'done', label: 'Done', color: 'bg-emerald-100' },
 ];
 
 const priorityOptions = [
   { value: 'low', label: 'Low', color: 'text-slate-500' },
   { value: 'medium', label: 'Medium', color: 'text-blue-500' },
-  { value: 'high', label: 'High', color: 'text-orange-500' },
+  { value: 'high', label: 'High', color: 'text-indigo-500' },
   { value: 'urgent', label: 'Urgent', color: 'text-red-500' },
 ];
 
@@ -90,7 +90,7 @@ const TaskCard = ({ task, onUpdate, onDelete, members }) => {
             <div className="flex items-center gap-1 text-xs text-slate-600 mb-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} subtasks</span>
-              {task.ai_generated && <Sparkles className="w-3 h-3 text-amber-500 ml-1" />}
+              {task.ai_generated && <Sparkles className="w-3 h-3 text-indigo-500 ml-1" />}
             </div>
           </div>
         )}

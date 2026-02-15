@@ -95,7 +95,7 @@ const Analytics = () => {
         backgroundColor: [
           'hsl(220, 13%, 69%)',
           'hsl(217, 91%, 60%)',
-          'hsl(38, 92%, 50%)',
+          'hsl(239, 84%, 67%)',
           'hsl(0, 86%, 66%)',
         ],
         borderWidth: 0,
@@ -111,7 +111,7 @@ const Analytics = () => {
         backgroundColor: [
           'hsl(220, 13%, 69%)',
           'hsl(217, 91%, 60%)',
-          'hsl(38, 92%, 50%)',
+          'hsl(239, 84%, 67%)',
           'hsl(142, 71%, 45%)',
         ],
         borderWidth: 0,

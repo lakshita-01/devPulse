@@ -21,18 +21,43 @@ from enum import Enum
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-allow_origins=["https://dev-pulse-orcin.vercel.app", "http://localhost:3000", "http://localhost:5173"]
+allow_origins=[
+    "https://dev-pulse-orcin.vercel.app",
+    "https://dev-pulse.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000"
+]
 
 # MongoDB connection with fallback
 try:
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'devpulse')
+    
     # Use tlsAllowInvalidCertificates=True to avoid SSL handshake issues on some environments
     if "mongodb+srv" in mongo_url:
-        client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000, tlsAllowInvalidCertificates=True)
+        import certifi
+        client = AsyncIOMotorClient(
+            mongo_url, 
+            serverSelectionTimeoutMS=5000, 
+            tlsAllowInvalidCertificates=True,
+            tls=True,
+            tlsCAFile=certifi.where()
+        )
     else:
         client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
-    db = client[os.environ.get('DB_NAME', 'devpulse')]
-    print(f"[INFO] Connecting to MongoDB: {mongo_url}")
+    
+    db = client[db_name]
+    print(f"[INFO] Connecting to MongoDB database: {db_name}")
+    
+    # Verify connection on startup
+    async def verify_conn():
+        try:
+            await client.admin.command('ping')
+            print("[INFO] MongoDB connection verified")
+        except Exception as e:
+            print(f"[ERROR] MongoDB ping failed: {e}")
+            
 except Exception as e:
     print(f"[ERROR] MongoDB connection failed: {e}")
     print("[INFO] Please install MongoDB or use MongoDB Atlas")
@@ -76,6 +101,7 @@ manager = ConnectionManager()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    await verify_conn()
     yield
     # Shutdown
     client.close()
@@ -362,7 +388,8 @@ async def login(user_data: UserLogin):
         workspaces=user.get("workspaces", [])
     )
     
-    workspace_id = user.get("workspaces", [None])[0]
+    workspaces = user.get("workspaces", [])
+    workspace_id = workspaces[0] if workspaces else None
     
     return TokenResponse(
         access_token=access_token,
