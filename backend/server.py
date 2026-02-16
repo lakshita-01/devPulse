@@ -34,25 +34,41 @@ try:
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     db_name = os.environ.get('DB_NAME', 'devpulse')
     
-    # Use tlsAllowInvalidCertificates=True to avoid SSL handshake issues on some environments
-    if "mongodb+srv" in mongo_url:
-        import certifi
-        # For local development with SSL issues, we use these parameters to be as compatible as possible.
-        # The TLSV1_ALERT_INTERNAL_ERROR is a common issue with Atlas and certain Python/OpenSSL versions.
-        client = AsyncIOMotorClient(
-            mongo_url, 
-            serverSelectionTimeoutMS=5000, 
-            tls=True,
-            tlsAllowInvalidCertificates=True,
-            tlsCAFile=certifi.where(),
-            connectTimeoutMS=10000,
-            socketTimeoutMS=10000,
-            retryWrites=True,
-            # This can help with some handshake issues
-            appname="devpulse"
-        )
+    if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
+        try:
+            import certifi
+            import ssl
+            
+            # Create SSL context with proper settings for Render/production
+            ssl_context = ssl.create_default_context(cafile=certifi.where())
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            client = AsyncIOMotorClient(
+                mongo_url,
+                serverSelectionTimeoutMS=30000,
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000,
+                tls=True,
+                tlsAllowInvalidCertificates=True,
+                tlsInsecure=True,
+                retryWrites=True,
+                w='majority'
+            )
+        except ImportError:
+            # Fallback if certifi not available
+            client = AsyncIOMotorClient(
+                mongo_url,
+                serverSelectionTimeoutMS=30000,
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000,
+                tls=True,
+                tlsAllowInvalidCertificates=True,
+                tlsInsecure=True,
+                retryWrites=True
+            )
     else:
-        # Local MongoDB usually doesn't need TLS
+        # Local MongoDB
         client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
     
     db = client[db_name]
@@ -65,6 +81,7 @@ try:
             print("[INFO] MongoDB connection verified")
         except Exception as e:
             print(f"[ERROR] MongoDB ping failed: {e}")
+            print("[INFO] Continuing anyway - connection will retry automatically")
             
 except Exception as e:
     print(f"[ERROR] MongoDB connection failed: {e}")

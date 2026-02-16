@@ -65,8 +65,8 @@ const TeamManagement = () => {
     
     try {
       await axios.post(
-        `${API_URL}/api/workspaces/${workspaceId}/invite`,
-        { email: inviteEmail },
+        `${API_URL}/api/workspaces/${workspaceId}/invite?email=${encodeURIComponent(inviteEmail)}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
