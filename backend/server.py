@@ -37,12 +37,6 @@ try:
     if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
         try:
             import certifi
-            import ssl
-            
-            # Create SSL context with proper settings for Render/production
-            ssl_context = ssl.create_default_context(cafile=certifi.where())
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
             
             client = AsyncIOMotorClient(
                 mongo_url,
@@ -51,12 +45,10 @@ try:
                 socketTimeoutMS=30000,
                 tls=True,
                 tlsAllowInvalidCertificates=True,
-                tlsInsecure=True,
                 retryWrites=True,
                 w='majority'
             )
         except ImportError:
-            # Fallback if certifi not available
             client = AsyncIOMotorClient(
                 mongo_url,
                 serverSelectionTimeoutMS=30000,
@@ -64,7 +56,6 @@ try:
                 socketTimeoutMS=30000,
                 tls=True,
                 tlsAllowInvalidCertificates=True,
-                tlsInsecure=True,
                 retryWrites=True
             )
     else:
