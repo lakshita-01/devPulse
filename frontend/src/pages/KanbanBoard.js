@@ -37,10 +37,10 @@ import { toast } from 'sonner';
 import { Badge } from '../components/ui/badge';
 
 const statusColumns = [
-  { id: 'todo', label: 'To Do', color: 'bg-slate-100' },
-  { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100' },
-  { id: 'review', label: 'Review', color: 'bg-indigo-100' },
-  { id: 'done', label: 'Done', color: 'bg-emerald-100' },
+  { id: 'todo', label: 'To Do', color: 'bg-slate-100 dark:bg-slate-700' },
+  { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 dark:bg-blue-900/30' },
+  { id: 'review', label: 'Review', color: 'bg-indigo-100 dark:bg-indigo-900/30' },
+  { id: 'done', label: 'Done', color: 'bg-emerald-100 dark:bg-emerald-900/30' },
 ];
 
 const priorityOptions = [
@@ -317,7 +317,7 @@ const KanbanBoard = () => {
           <Button variant="ghost" onClick={() => navigate('/app/projects')} className="mb-2">
             ← Back to Projects
           </Button>
-          <h1 className="font-display text-3xl font-bold text-slate-900">Task Board</h1>
+          <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-slate-100">Task Board</h1>
         </div>
         
         <Button

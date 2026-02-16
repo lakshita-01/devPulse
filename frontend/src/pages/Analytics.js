@@ -171,7 +171,7 @@ const Analytics = () => {
     <div className="space-y-8 max-w-7xl" data-testid="analytics-page">
       {/* Header */}
       <div>
-        <h1 className="font-display text-4xl font-bold text-slate-900 mb-2">Analytics & Insights</h1>
+        <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Analytics & Insights</h1>
         <p className="text-slate-600">Track your team's performance and productivity metrics</p>
       </div>
 
@@ -246,7 +246,7 @@ const Analytics = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Bar Chart - Weekly Progress */}
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-          <h3 className="font-display font-bold text-xl text-slate-900 mb-1">Weekly Task Completion</h3>
+          <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-1">Weekly Task Completion</h3>
           <p className="text-sm text-slate-600 mb-6">Tasks completed over the last 7 days</p>
           <div className="h-72">
             <Bar data={weeklyChartData} options={chartOptions} />
@@ -255,7 +255,7 @@ const Analytics = () => {
 
         {/* Doughnut Chart - Status Distribution */}
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-          <h3 className="font-display font-bold text-xl text-slate-900 mb-1">Task Status Distribution</h3>
+          <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-1">Task Status Distribution</h3>
           <p className="text-sm text-slate-600 mb-6">Current task breakdown by status</p>
           <div className="h-72">
             <Doughnut data={statusData} options={doughnutOptions} />
@@ -264,7 +264,7 @@ const Analytics = () => {
 
         {/* Priority Distribution */}
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-          <h3 className="font-display font-bold text-xl text-slate-900 mb-1">Priority Distribution</h3>
+          <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-1">Priority Distribution</h3>
           <p className="text-sm text-slate-600 mb-6">Tasks organized by priority level</p>
           <div className="h-72">
             <Doughnut data={priorityData} options={doughnutOptions} />
@@ -273,7 +273,7 @@ const Analytics = () => {
 
         {/* Team Workload */}
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-          <h3 className="font-display font-bold text-xl text-slate-900 mb-1">Team Workload</h3>
+          <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-1">Team Workload</h3>
           <p className="text-sm text-slate-600 mb-6">Active tasks per team member</p>
           <div className="space-y-3">
             {analytics?.workload?.slice(0, 5).map((member, idx) => (

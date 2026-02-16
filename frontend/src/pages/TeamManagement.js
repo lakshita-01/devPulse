@@ -189,7 +189,7 @@ const TeamManagement = () => {
 
       {/* Team Members List */}
       <div className="space-y-4">
-        <h2 className="font-display text-2xl font-bold text-slate-900">Team Members</h2>
+        <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100">Team Members</h2>
         
         <div className="grid gap-4">
           {members.map((member, index) => {
@@ -273,7 +273,7 @@ const TeamManagement = () => {
 
       {/* Pending Tasks by Deadline */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-        <h2 className="font-display text-xl font-bold text-slate-900 mb-4">Upcoming Deadlines</h2>
+        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Upcoming Deadlines</h2>
         <div className="space-y-3">
           {tasks
             .filter(t => t.status !== 'done' && t.due_date)

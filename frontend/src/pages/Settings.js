@@ -25,13 +25,13 @@ const Settings = () => {
     <div className="space-y-8 max-w-4xl" data-testid="settings-page">
       {/* Header */}
       <div>
-        <h1 className="font-display text-4xl font-bold text-slate-900 mb-2">Settings</h1>
+        <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Settings</h1>
         <p className="text-slate-600">Manage your account and preferences</p>
       </div>
 
       {/* Profile Section */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-        <h2 className="font-display text-xl font-bold text-slate-900 mb-6">Profile Information</h2>
+        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">Profile Information</h2>
         
         <div className="flex items-center gap-6 mb-6">
           <img
@@ -75,7 +75,7 @@ const Settings = () => {
 
       {/* Preferences */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-        <h2 className="font-display text-xl font-bold text-slate-900 mb-6">Preferences</h2>
+        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">Preferences</h2>
         
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ const Settings = () => {
 
       {/* Security */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-        <h2 className="font-display text-xl font-bold text-slate-900 mb-6">Security</h2>
+        <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">Security</h2>
         
         <div className="space-y-4">
           <div>

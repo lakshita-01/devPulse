@@ -216,7 +216,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
             Welcome back 👋
           </h1>
           <p className="text-slate-600">Here's what's happening with your projects today</p>
@@ -267,7 +267,7 @@ const Dashboard = () => {
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="font-display font-bold text-xl text-slate-900">Weekly Progress</h3>
+              <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100">Weekly Progress</h3>
               <p className="text-sm text-slate-600 mt-1">Tasks completed over the last 7 days</p>
             </div>
           </div>
@@ -279,7 +279,7 @@ const Dashboard = () => {
         {/* Doughnut Chart */}
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
           <div className="mb-6">
-            <h3 className="font-display font-bold text-xl text-slate-900">Task Distribution</h3>
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100">Task Distribution</h3>
             <p className="text-sm text-slate-600 mt-1">Tasks by status</p>
           </div>
           <div className="h-64">
@@ -291,7 +291,7 @@ const Dashboard = () => {
       {/* Team Workload */}
       {analytics?.workload && analytics.workload.length > 0 && (
         <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
-          <h3 className="font-display font-bold text-xl text-slate-900 mb-4">Team Workload</h3>
+          <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-4">Team Workload</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {analytics.workload.map((member, idx) => (
               <div key={idx} className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
@@ -314,7 +314,7 @@ const Dashboard = () => {
       <Card className="p-6 bg-gradient-to-br from-[hsl(0,86%,96%)] to-[hsl(177,100%,95%)] border-slate-200">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-display font-bold text-xl text-slate-900 mb-2">
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-2">
               Ready to boost productivity?
             </h3>
             <p className="text-slate-700">

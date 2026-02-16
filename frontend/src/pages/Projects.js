@@ -84,7 +84,7 @@ const Projects = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-4xl font-bold text-slate-900 mb-2">Projects</h1>
+          <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Projects</h1>
           <p className="text-slate-600">Manage your projects and track progress</p>
         </div>
         
@@ -149,7 +149,7 @@ const Projects = () => {
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FolderKanban className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="font-display font-bold text-xl text-slate-900 mb-2">
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100 mb-2">
               No projects yet
             </h3>
             <p className="text-slate-600 mb-6">
@@ -185,7 +185,7 @@ const Projects = () => {
                   <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[hsl(0,86%,56%)] group-hover:translate-x-1 transition-all" />
                 </div>
                 
-                <h3 className="font-display font-bold text-lg text-slate-900 mb-2 group-hover:text-[hsl(0,86%,56%)] transition-colors">
+                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-slate-100 mb-2 group-hover:text-[hsl(0,86%,56%)] transition-colors">
                   {project.name}
                 </h3>
                 
