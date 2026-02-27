@@ -12,14 +12,22 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!workspaceId) return;
 
-    const wsUrl = API_URL.replace('/api', '').replace('http', 'ws');
+    const wsUrl = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
     const newSocket = io(wsUrl, {
       path: `/ws/${workspaceId}`,
       transports: ['websocket']
     });
 
     newSocket.on('connect', () => {
-      console.log('WebSocket connected');
+      console.log('WebSocket connected to', wsUrl);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
+
+    newSocket.on('error', (error) => {
+      console.error('WebSocket error:', error);
     });
 
     newSocket.on('task_created', (data) => {

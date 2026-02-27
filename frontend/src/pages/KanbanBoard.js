@@ -185,35 +185,9 @@ const KanbanBoard = () => {
       due_date: taskForm.due_date ? new Date(taskForm.due_date).toISOString() : null,
     };
 
-    // AI Generation
     if (taskForm.generate_ai && taskForm.title) {
-      setAiLoading(true);
-      try {
-        // Use puter.js for AI subtask generation
-        const prompt = `Break down this task into 3-5 actionable subtasks:\n\nTask: ${taskForm.title}${taskForm.description ? `\nDescription: ${taskForm.description}` : ''}\n\nReturn only a JSON array of subtasks in this format: [{"title": "subtask 1", "completed": false}]`;
-        
-        const response = await window.puter.ai.chat(prompt, {
-          model: 'gpt-4o-mini',
-        });
-        
-        // Parse AI response
-        try {
-          const content = response.message?.content || response;
-          const jsonMatch = content.match(/\[.*\]/s);
-          if (jsonMatch) {
-            const subtasks = JSON.parse(jsonMatch[0]);
-            taskData.subtasks = subtasks;
-            toast.success('AI subtasks generated!');
-          }
-        } catch (err) {
-          console.error('Failed to parse AI response:', err);
-        }
-      } catch (error) {
-        console.error('AI generation failed:', error);
-        toast.error('AI generation failed, creating task without subtasks');
-      } finally {
-        setAiLoading(false);
-      }
+      setAiLoading(false);
+      toast.info('AI subtask generation is currently unavailable');
     }
 
     try {

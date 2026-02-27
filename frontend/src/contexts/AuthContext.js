@@ -34,18 +34,25 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-    const { access_token, user: userData, workspace_id } = response.data;
-    
-    setToken(access_token);
-    setUser(userData);
-    setWorkspaceId(workspace_id);
-    
-    localStorage.setItem('token', access_token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('workspaceId', workspace_id);
-    
-    return response.data;
+    try {
+      console.log('Attempting login with:', { email, API_URL });
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      console.log('Login response:', response.data);
+      const { access_token, user: userData, workspace_id } = response.data;
+      
+      setToken(access_token);
+      setUser(userData);
+      setWorkspaceId(workspace_id);
+      
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('workspaceId', workspace_id);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      throw error;
+    }
   };
 
   const register = async (name, email, password) => {

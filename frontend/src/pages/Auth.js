@@ -32,7 +32,9 @@ const Auth = () => {
       }
       navigate('/app/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Authentication failed');
+      const errorMessage = error.response?.data?.detail || error.message || 'Authentication failed';
+      console.error('Auth error:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
