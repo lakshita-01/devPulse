@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    if (!workspaceId) return;
+    if (!workspaceId || !API_URL) return;
 
     const wsUrl = `${API_URL.replace('http://', 'ws://').replace('https://', 'wss://')}/ws/${workspaceId}`;
     
@@ -22,6 +22,10 @@ export const SocketProvider = ({ children }) => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
       };
 
       ws.onmessage = (event) => {
@@ -51,7 +55,9 @@ export const SocketProvider = ({ children }) => {
       setSocket(ws);
 
       return () => {
-        ws.close();
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
       };
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
