@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
@@ -12,53 +11,51 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!workspaceId) return;
 
-    const wsUrl = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
-    const newSocket = io(wsUrl, {
-      path: `/ws/${workspaceId}`,
-      transports: ['websocket']
-    });
+    const wsUrl = `${API_URL.replace('http://', 'ws://').replace('https://', 'wss://')}/ws/${workspaceId}`;
+    
+    try {
+      const ws = new WebSocket(wsUrl);
 
-    newSocket.on('connect', () => {
-      console.log('WebSocket connected to', wsUrl);
-    });
+      ws.onopen = () => {
+        console.log('WebSocket connected to', wsUrl);
+      };
 
-    newSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-    });
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
 
-    newSocket.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'task_created') {
+            toast.success('New task created', {
+              description: data.task?.title
+            });
+          } else if (data.type === 'task_updated') {
+            toast.info('Task updated', {
+              description: data.task?.title
+            });
+          } else if (data.type === 'task_deleted') {
+            toast.info('Task deleted');
+          } else if (data.type === 'task_ai_complete') {
+            toast.success('AI subtasks generated!', {
+              description: 'Subtasks have been created for your task'
+            });
+          }
+        } catch (err) {
+          console.error('Failed to parse WebSocket message:', err);
+        }
+      };
 
-    newSocket.on('task_created', (data) => {
-      toast.success('New task created', {
-        description: data.task?.title
-      });
-    });
+      setSocket(ws);
 
-    newSocket.on('task_updated', (data) => {
-      if (data.task) {
-        toast.info('Task updated', {
-          description: data.task.title
-        });
-      }
-    });
-
-    newSocket.on('task_deleted', (data) => {
-      toast.info('Task deleted');
-    });
-
-    newSocket.on('task_ai_complete', (data) => {
-      toast.success('AI subtasks generated!', {
-        description: 'Subtasks have been created for your task'
-      });
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.close();
-    };
+      return () => {
+        ws.close();
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+    }
   }, [workspaceId, API_URL]);
 
   return (
