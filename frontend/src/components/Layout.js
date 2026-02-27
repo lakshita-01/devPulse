@@ -1,9 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import PasswordChangeDialog from './PasswordChangeDialog';
+import { useAuth } from '../contexts/AuthContext';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const { user, refreshUser } = useAuth();
+
+  useEffect(() => {
+    if (user?.must_change_password) {
+      setShowPasswordChange(true);
+    }
+  }, [user]);
+
+  const handlePasswordChanged = () => {
+    setShowPasswordChange(false);
+    refreshUser();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -14,6 +29,11 @@ const Layout = ({ children }) => {
           {children}
         </main>
       </div>
+      <PasswordChangeDialog 
+        open={showPasswordChange} 
+        onClose={() => {}} 
+        onSuccess={handlePasswordChanged}
+      />
     </div>
   );
 };

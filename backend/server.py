@@ -156,9 +156,19 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+class MemberCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    workspace_id: str
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
 
 class UserResponse(BaseModel):
     id: str
@@ -166,6 +176,7 @@ class UserResponse(BaseModel):
     email: str
     avatar: Optional[str] = None
     workspaces: List[str] = []
+    must_change_password: bool = False
 
 class WorkspaceMember(BaseModel):
     user_id: str
@@ -350,6 +361,7 @@ async def register(user_data: UserCreate):
         "password": get_password_hash(user_data.password),
         "avatar": f"https://api.dicebear.com/7.x/avataaars/svg?seed={user_data.name}",
         "workspaces": [],
+        "must_change_password": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -401,7 +413,8 @@ async def login(user_data: UserLogin):
         name=user["name"],
         email=user["email"],
         avatar=user.get("avatar"),
-        workspaces=user.get("workspaces", [])
+        workspaces=user.get("workspaces", []),
+        must_change_password=user.get("must_change_password", False)
     )
     
     workspaces = user.get("workspaces", [])
@@ -523,6 +536,60 @@ async def invite_member(workspace_id: str, email: str, user: dict = Depends(get_
         "name": invited_user["name"],
         "email": invited_user["email"]
     }}
+
+# Create member account (admin only)
+@api_router.post("/workspaces/{workspace_id}/members")
+async def create_member(workspace_id: str, member_data: MemberCreate, user: dict = Depends(get_current_user)):
+    await verify_workspace_access(user, workspace_id, required_role=Role.ADMIN)
+    
+    # Check if user exists
+    existing = await db.users.find_one({"email": member_data.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create member account
+    member_id = str(ObjectId())
+    member_doc = {
+        "id": member_id,
+        "name": member_data.name,
+        "email": member_data.email,
+        "password": get_password_hash(member_data.password),
+        "avatar": f"https://api.dicebear.com/7.x/avataaars/svg?seed={member_data.name}",
+        "workspaces": [workspace_id],
+        "must_change_password": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(member_doc)
+    
+    # Add member to workspace
+    await db.workspaces.update_one(
+        {"id": workspace_id},
+        {"$push": {"members": {"user_id": member_id, "role": "member"}}}
+    )
+    
+    return {"message": "Member created successfully", "user": {
+        "id": member_id,
+        "name": member_data.name,
+        "email": member_data.email
+    }}
+
+# Change password
+@api_router.post("/auth/change-password")
+async def change_password(password_data: PasswordChange, user: dict = Depends(get_current_user)):
+    # Verify old password
+    if not verify_password(password_data.old_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    
+    # Update password
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "password": get_password_hash(password_data.new_password),
+            "must_change_password": False
+        }}
+    )
+    
+    return {"message": "Password changed successfully"}
 
 # Create workspace invite (admin only)
 @api_router.post("/workspaces/{workspace_id}/invites", response_model=InviteResponse)

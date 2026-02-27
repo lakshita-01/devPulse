@@ -91,6 +91,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('workspaceId', newWorkspaceId);
   };
 
+  const refreshUser = () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -100,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       register, 
       logout, 
       switchWorkspace,
+      refreshUser,
       loading,
       API_URL 
     }}>

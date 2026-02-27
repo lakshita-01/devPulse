@@ -15,7 +15,9 @@ const TeamManagement = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createMemberOpen, setCreateMemberOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [newMember, setNewMember] = useState({ name: '', email: '', password: '' });
   const [inviting, setInviting] = useState(false);
   const { token, workspaceId, API_URL, user } = useAuth();
 
@@ -73,9 +75,31 @@ const TeamManagement = () => {
       toast.success('Member invited successfully!');
       setDialogOpen(false);
       setInviteEmail('');
-      fetchData(); // Refresh members list
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to invite member');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleCreateMember = async (e) => {
+    e.preventDefault();
+    setInviting(true);
+    
+    try {
+      await axios.post(
+        `${API_URL}/api/workspaces/${workspaceId}/members`,
+        newMember,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Member account created! They can now login.');
+      setCreateMemberOpen(false);
+      setNewMember({ name: '', email: '', password: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create member');
     } finally {
       setInviting(false);
     }
@@ -104,43 +128,107 @@ const TeamManagement = () => {
         </div>
         
         {isAdmin && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Invite Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Invite Team Member</DialogTitle>
-                <DialogDescription>
-                  Enter the email of an existing user to invite them to your workspace
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleInviteMember} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Email Address
-                  </label>
-                  <Input
-                    type="email"
-                    placeholder="member@example.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={inviting}
-                  className="w-full bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
-                >
-                  {inviting ? 'Inviting...' : 'Send Invite'}
+          <>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite Existing User
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Invite Team Member</DialogTitle>
+                  <DialogDescription>
+                    Enter the email of an existing user to invite them to your workspace
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleInviteMember} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Email Address
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="member@example.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={inviting}
+                    className="w-full bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
+                  >
+                    {inviting ? 'Inviting...' : 'Send Invite'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={createMemberOpen} onOpenChange={setCreateMemberOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-slate-300">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Create Member Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create Member Account</DialogTitle>
+                  <DialogDescription>
+                    Create login credentials for a new team member
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateMember} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Full Name
+                    </label>
+                    <Input
+                      placeholder="John Doe"
+                      value={newMember.name}
+                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Email Address
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="member@example.com"
+                      value={newMember.email}
+                      onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Temporary Password
+                    </label>
+                    <Input
+                      type="password"
+                      placeholder="Create temporary password"
+                      value={newMember.password}
+                      onChange={(e) => setNewMember({ ...newMember, password: e.target.value })}
+                      required
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Member will be prompted to change this on first login</p>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={inviting}
+                    className="w-full bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
+                  >
+                    {inviting ? 'Creating...' : 'Create Account'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </>
         )}
       </div>
 
