@@ -28,6 +28,13 @@ const PasswordChangeDialog = ({ open, onClose, onSuccess }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Update user in localStorage
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (userData) {
+        userData.must_change_password = false;
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      
       toast.success('Password changed successfully!');
       setPasswords({ old_password: '', new_password: '', confirm: '' });
       onSuccess();

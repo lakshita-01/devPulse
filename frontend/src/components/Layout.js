@@ -16,8 +16,12 @@ const Layout = ({ children }) => {
   }, [user]);
 
   const handlePasswordChanged = () => {
+    // Update user state from localStorage
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      refreshUser();
+    }
     setShowPasswordChange(false);
-    refreshUser();
   };
 
   return (
