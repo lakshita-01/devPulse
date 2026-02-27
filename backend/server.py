@@ -867,6 +867,35 @@ async def handle_webhook(webhook: WebhookEvent):
     
     return {"received": True}
 
+# AI subtask generation endpoint
+@api_router.post("/ai/generate-subtasks")
+async def generate_subtasks(data: dict, user: dict = Depends(get_current_user)):
+    prompt = data.get("prompt", "")
+    
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt is required")
+    
+    try:
+        # Use a simple LLM-style generation (mock for now, replace with actual LLM)
+        import re
+        
+        # Extract task title
+        task_match = re.search(r'Task: (.+?)(?:\n|$)', prompt)
+        task_title = task_match.group(1) if task_match else "task"
+        
+        # Generate subtasks based on common patterns
+        subtasks = [
+            {"title": f"Research and plan {task_title}", "completed": False},
+            {"title": f"Implement core functionality", "completed": False},
+            {"title": f"Test and validate results", "completed": False},
+            {"title": f"Document and review", "completed": False}
+        ]
+        
+        return {"subtasks": subtasks}
+    except Exception as e:
+        logging.error(f"AI generation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate subtasks")
+
 # WebSocket endpoint
 @app.websocket("/ws/{workspace_id}")
 async def websocket_endpoint(websocket: WebSocket, workspace_id: str):

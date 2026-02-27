@@ -186,8 +186,26 @@ const KanbanBoard = () => {
     };
 
     if (taskForm.generate_ai && taskForm.title) {
-      setAiLoading(false);
-      toast.info('AI subtask generation is currently unavailable');
+      setAiLoading(true);
+      try {
+        const prompt = `Break down this task into 3-5 actionable subtasks:\n\nTask: ${taskForm.title}${taskForm.description ? `\nDescription: ${taskForm.description}` : ''}\n\nReturn only a JSON array of subtasks in this format: [{"title": "subtask 1", "completed": false}]`;
+        
+        const response = await axios.post(
+          `${API_URL}/api/ai/generate-subtasks`,
+          { prompt },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (response.data.subtasks) {
+          taskData.subtasks = response.data.subtasks;
+          toast.success('AI subtasks generated!');
+        }
+      } catch (error) {
+        console.error('AI generation failed:', error);
+        toast.error('AI generation failed, creating task without subtasks');
+      } finally {
+        setAiLoading(false);
+      }
     }
 
     try {
@@ -369,28 +387,28 @@ const KanbanBoard = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Priority</label>
                 <Select value={taskForm.priority} onValueChange={(value) => setTaskForm({ ...taskForm, priority: value })}>
-                  <SelectTrigger data-testid="task-priority-select">
-                    <SelectValue />
+                  <SelectTrigger data-testid="task-priority-select" className="text-slate-900 dark:text-slate-100">
+                    <SelectValue className="text-slate-900 dark:text-slate-100" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-800">
                     {priorityOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value} className="text-slate-900 dark:text-slate-100">{opt.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Assignee</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Assignee</label>
                 <Select value={taskForm.assignee_id} onValueChange={(value) => setTaskForm({ ...taskForm, assignee_id: value })}>
-                  <SelectTrigger data-testid="task-assignee-select">
-                    <SelectValue placeholder="Select assignee" />
+                  <SelectTrigger data-testid="task-assignee-select" className="text-slate-900 dark:text-slate-100">
+                    <SelectValue placeholder="Select assignee" className="text-slate-900 dark:text-slate-100" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-800">
                     {members.map(member => (
-                      <SelectItem key={member.user_id} value={member.user_id}>{member.name}</SelectItem>
+                      <SelectItem key={member.user_id} value={member.user_id} className="text-slate-900 dark:text-slate-100">{member.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
