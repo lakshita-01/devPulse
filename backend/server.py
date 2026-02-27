@@ -341,6 +341,7 @@ api_router = APIRouter(prefix="/api")
 
 # Root endpoint
 @app.get("/")
+@app.head("/")
 async def root():
     return {"message": "DevPulse API is running", "status": "ok"}
 
