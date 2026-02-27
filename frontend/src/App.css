@@ -9,7 +9,7 @@
   --secondary: 177 198 204;  /* Teal/Cyan */
   --secondary-foreground: 15 23 42;
   
-  --accent: 99 102 241;  /* Indigo 500 */
+  --accent: 59 130 246;  /* Blue 500 */
   --accent-foreground: 255 255 255;
   
   --muted: 241 245 249;
@@ -41,7 +41,7 @@
   --secondary: 94 234 212;
   --secondary-foreground: 15 23 42;
   
-  --accent: 129 140 248;  /* Indigo 400 */
+  --accent: 96 165 250;  /* Blue 400 */
   --accent-foreground: 255 255 255;
   
   --muted: 30 41 59;
