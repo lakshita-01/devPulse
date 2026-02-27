@@ -132,7 +132,7 @@ const KanbanBoard = () => {
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
-    priority: 'medium',
+    priority: '',
     assignee_id: '',
     due_date: '',
     generate_ai: false
@@ -289,7 +289,7 @@ const KanbanBoard = () => {
     setTaskForm({
       title: '',
       description: '',
-      priority: 'medium',
+      priority: '',
       assignee_id: '',
       due_date: '',
       generate_ai: false
