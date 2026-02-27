@@ -78,7 +78,7 @@ const Settings = () => {
         <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">Preferences</h2>
         
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                 {darkMode ? <Moon className="w-5 h-5 text-slate-700" /> : <Sun className="w-5 h-5 text-slate-700" />}
@@ -92,7 +92,7 @@ const Settings = () => {
               checked={darkMode}
               onCheckedChange={setDarkMode}
             />
-          </div>
+          </div> */}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

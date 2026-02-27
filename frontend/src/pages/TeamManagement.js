@@ -88,17 +88,25 @@ const TeamManagement = () => {
     setInviting(true);
     
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/api/workspaces/${workspaceId}/members`,
-        newMember,
+        { ...newMember, workspace_id: workspaceId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      toast.success('Member account created! They can now login.');
+      toast.success(
+        `Member account created successfully!`,
+        {
+          description: `Email: ${newMember.email}\nPassword: ${newMember.password}\nThey will be prompted to change password on first login.`,
+          duration: 10000
+        }
+      );
+      
       setCreateMemberOpen(false);
       setNewMember({ name: '', email: '', password: '' });
-      fetchData();
+      await fetchData();
     } catch (error) {
+      console.error('Create member error:', error);
       toast.error(error.response?.data?.detail || 'Failed to create member');
     } finally {
       setInviting(false);
