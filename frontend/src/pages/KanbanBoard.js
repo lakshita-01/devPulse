@@ -11,7 +11,8 @@ import {
   Flag,
   Sparkles,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Eye
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,7 +51,7 @@ const priorityOptions = [
   { value: 'urgent', label: 'Urgent', color: 'text-red-500' },
 ];
 
-const TaskCard = ({ task, onUpdate, onDelete, members }) => {
+const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
   const priorityColor = priorityOptions.find(p => p.value === task.priority)?.color || '';
   const assignee = task.assignee;
 
@@ -71,6 +72,9 @@ const TaskCard = ({ task, onUpdate, onDelete, members }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(task)}>
+                <Eye className="w-4 h-4 mr-2" /> View
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onUpdate(task)}>
                 <Edit2 className="w-4 h-4 mr-2" /> Edit
               </DropdownMenuItem>
@@ -127,6 +131,8 @@ const KanbanBoard = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingTask, setViewingTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [taskForm, setTaskForm] = useState({
@@ -272,6 +278,11 @@ const KanbanBoard = () => {
     }
   };
 
+  const openViewDialog = (task) => {
+    setViewingTask(task);
+    setViewDialogOpen(true);
+  };
+
   const openEditDialog = (task) => {
     setEditingTask(task);
     setTaskForm({
@@ -342,6 +353,7 @@ const KanbanBoard = () => {
                   <TaskCard
                     key={task.id}
                     task={task}
+                    onView={openViewDialog}
                     onUpdate={openEditDialog}
                     onDelete={handleDeleteTask}
                     members={members}
@@ -352,6 +364,101 @@ const KanbanBoard = () => {
           );
         })}
       </div>
+
+      {/* View Task Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
+          {viewingTask && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-600">Title</label>
+                <p className="text-slate-900 font-semibold mt-1">{viewingTask.title}</p>
+              </div>
+              
+              {viewingTask.description && (
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Description</label>
+                  <p className="text-slate-900 mt-1">{viewingTask.description}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Priority</label>
+                  <p className="text-slate-900 mt-1 capitalize">{viewingTask.priority}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Status</label>
+                  <p className="text-slate-900 mt-1 capitalize">{viewingTask.status.replace('_', ' ')}</p>
+                </div>
+              </div>
+              
+              {viewingTask.assignee && (
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Assignee</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <img
+                      src={viewingTask.assignee.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+                      alt={viewingTask.assignee.name}
+                      className="w-6 h-6 rounded-full"
+                    />
+                    <span className="text-slate-900">{viewingTask.assignee.name}</span>
+                  </div>
+                </div>
+              )}
+              
+              {viewingTask.due_date && (
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Due Date</label>
+                  <p className="text-slate-900 mt-1">{new Date(viewingTask.due_date).toLocaleDateString()}</p>
+                </div>
+              )}
+              
+              {viewingTask.subtasks && viewingTask.subtasks.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                    Subtasks
+                    {viewingTask.ai_generated && <Sparkles className="w-4 h-4 text-indigo-500" />}
+                  </label>
+                  <div className="mt-2 space-y-2">
+                    {viewingTask.subtasks.map((subtask, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                        <CheckCircle2 className={`w-4 h-4 ${subtask.completed ? 'text-emerald-500' : 'text-slate-300'}`} />
+                        <span className={`text-sm ${subtask.completed ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                          {subtask.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={() => {
+                    setViewDialogOpen(false);
+                    openEditDialog(viewingTask);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit Task
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setViewDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Task Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
