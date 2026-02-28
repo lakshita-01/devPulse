@@ -69,8 +69,9 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => (
 
 const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
+  const [myTasks, setMyTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { token, workspaceId, API_URL } = useAuth();
+  const { token, workspaceId, API_URL, user } = useAuth();
   const navigate = useNavigate();
 
   const fetchAnalytics = async () => {
@@ -78,10 +79,19 @@ const Dashboard = () => {
     
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/analytics/${workspaceId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAnalytics(response.data);
+      const [analyticsRes, tasksRes] = await Promise.all([
+        axios.get(`${API_URL}/api/analytics/${workspaceId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/api/tasks/${workspaceId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setAnalytics(analyticsRes.data);
+      
+      // Filter tasks assigned to current user
+      const userTasks = tasksRes.data.tasks.filter(t => t.assignee_id === user?.id);
+      setMyTasks(userTasks);
     } catch (error) {
       toast.error('Failed to load analytics');
       console.error(error);
@@ -287,6 +297,63 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* My Tasks Section */}
+      {myTasks.length > 0 && (
+        <Card className="p-6 bg-white/80 backdrop-blur-sm border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-slate-100">My Tasks</h3>
+            <Badge variant="secondary">{myTasks.length} tasks</Badge>
+          </div>
+          <div className="space-y-3">
+            {myTasks.slice(0, 5).map(task => {
+              const daysUntil = task.due_date 
+                ? Math.ceil((new Date(task.due_date) - new Date()) / (1000 * 60 * 60 * 24))
+                : null;
+              
+              return (
+                <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={`w-2 h-2 rounded-full ${
+                      task.status === 'done' ? 'bg-emerald-500' :
+                      task.status === 'in_progress' ? 'bg-blue-500' :
+                      task.status === 'review' ? 'bg-indigo-500' : 'bg-slate-400'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900 text-sm">{task.title}</p>
+                      <p className="text-xs text-slate-600 capitalize">{task.status.replace('_', ' ')}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {task.priority && (
+                      <Badge variant="outline" className="text-xs mb-1">
+                        {task.priority}
+                      </Badge>
+                    )}
+                    {daysUntil !== null && (
+                      <div className={`text-xs font-semibold ${
+                        daysUntil < 0 ? 'text-red-600' : daysUntil < 3 ? 'text-orange-600' : 'text-slate-600'
+                      }`}>
+                        {daysUntil < 0 ? 'Overdue' : daysUntil === 0 ? 'Today' : `${daysUntil}d`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {myTasks.length > 5 && (
+            <Button
+              variant="ghost"
+              className="w-full mt-3"
+              onClick={() => navigate('/app/projects')}
+            >
+              View all {myTasks.length} tasks
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+        </Card>
+      )}
 
       {/* Team Workload */}
       {analytics?.workload && analytics.workload.length > 0 && (

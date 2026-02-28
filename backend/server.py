@@ -196,12 +196,28 @@ class ProjectCreate(BaseModel):
     name: str
     description: Optional[str] = None
     workspace_id: str
+    team_id: Optional[str] = None
 
 class ProjectResponse(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
     workspace_id: str
+    team_id: Optional[str] = None
+    created_at: datetime
+
+class TeamCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    workspace_id: str
+    member_ids: List[str] = []
+
+class TeamResponse(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    workspace_id: str
+    members: List[Dict[str, Any]] = []
     created_at: datetime
 
 class SubTask(BaseModel):
@@ -678,13 +694,14 @@ async def accept_invite(token: str, user: dict = Depends(get_current_user)):
 
 # Project routes
 @api_router.get("/projects/{workspace_id}", response_model=List[ProjectResponse])
-async def get_projects(workspace_id: str, user: dict = Depends(get_current_user)):
+async def get_projects(workspace_id: str, team_id: Optional[str] = None, user: dict = Depends(get_current_user)):
     await verify_workspace_access(user, workspace_id)
     
-    projects = await db.projects.find(
-        {"workspace_id": workspace_id},
-        {"_id": 0}
-    ).to_list(100)
+    query = {"workspace_id": workspace_id}
+    if team_id:
+        query["team_id"] = team_id
+    
+    projects = await db.projects.find(query, {"_id": 0}).to_list(100)
     
     return [ProjectResponse(**serialize_doc(p)) for p in projects]
 
@@ -698,11 +715,110 @@ async def create_project(project_data: ProjectCreate, user: dict = Depends(get_c
         "name": project_data.name,
         "description": project_data.description,
         "workspace_id": project_data.workspace_id,
+        "team_id": project_data.team_id,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.projects.insert_one(project_doc)
     
     return ProjectResponse(**serialize_doc(project_doc))
+
+# Team routes
+@api_router.get("/teams/{workspace_id}", response_model=List[TeamResponse])
+async def get_teams(workspace_id: str, user: dict = Depends(get_current_user)):
+    await verify_workspace_access(user, workspace_id)
+    
+    teams = await db.teams.find({"workspace_id": workspace_id}, {"_id": 0}).to_list(100)
+    
+    result = []
+    for team in teams:
+        members = []
+        for member_id in team.get("member_ids", []):
+            member_user = await db.users.find_one({"id": member_id}, {"_id": 0, "password": 0})
+            if member_user:
+                members.append({
+                    "user_id": member_id,
+                    "name": member_user.get("name"),
+                    "email": member_user.get("email"),
+                    "avatar": member_user.get("avatar")
+                })
+        
+        result.append(TeamResponse(
+            id=team["id"],
+            name=team["name"],
+            description=team.get("description"),
+            workspace_id=team["workspace_id"],
+            members=members,
+            created_at=datetime.fromisoformat(team["created_at"])
+        ))
+    
+    return result
+
+@api_router.post("/teams", response_model=TeamResponse)
+async def create_team(team_data: TeamCreate, user: dict = Depends(get_current_user)):
+    await verify_workspace_access(user, team_data.workspace_id, required_role=Role.ADMIN)
+    
+    team_id = str(ObjectId())
+    team_doc = {
+        "id": team_id,
+        "name": team_data.name,
+        "description": team_data.description,
+        "workspace_id": team_data.workspace_id,
+        "member_ids": team_data.member_ids,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.teams.insert_one(team_doc)
+    
+    members = []
+    for member_id in team_data.member_ids:
+        member_user = await db.users.find_one({"id": member_id}, {"_id": 0, "password": 0})
+        if member_user:
+            members.append({
+                "user_id": member_id,
+                "name": member_user.get("name"),
+                "email": member_user.get("email"),
+                "avatar": member_user.get("avatar")
+            })
+    
+    return TeamResponse(
+        id=team_id,
+        name=team_data.name,
+        description=team_data.description,
+        workspace_id=team_data.workspace_id,
+        members=members,
+        created_at=datetime.now(timezone.utc)
+    )
+
+@api_router.patch("/teams/{team_id}")
+async def update_team(team_id: str, team_data: TeamCreate, user: dict = Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    await verify_workspace_access(user, team["workspace_id"], required_role=Role.ADMIN)
+    
+    await db.teams.update_one(
+        {"id": team_id},
+        {"$set": {
+            "name": team_data.name,
+            "description": team_data.description,
+            "member_ids": team_data.member_ids
+        }}
+    )
+    
+    updated_team = await db.teams.find_one({"id": team_id}, {"_id": 0})
+    
+    members = []
+    for member_id in updated_team.get("member_ids", []):
+        member_user = await db.users.find_one({"id": member_id}, {"_id": 0, "password": 0})
+        if member_user:
+            members.append({
+                "user_id": member_id,
+                "name": member_user.get("name"),
+                "email": member_user.get("email"),
+                "avatar": member_user.get("avatar")
+            })
+    
+    return TeamResponse(**serialize_doc(updated_team), members=members)
 
 # Task routes
 @api_router.get("/tasks/{workspace_id}")

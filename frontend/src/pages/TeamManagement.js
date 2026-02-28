@@ -66,16 +66,16 @@ const TeamManagement = () => {
     setInviting(true);
     
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/api/workspaces/${workspaceId}/invite?email=${encodeURIComponent(inviteEmail)}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      toast.success('Member invited successfully!');
+      toast.success(`${response.data.user.name} has been added to the team!`);
       setDialogOpen(false);
       setInviteEmail('');
-      fetchData();
+      await fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to invite member');
     } finally {

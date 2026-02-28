@@ -6,6 +6,7 @@ import {
   FolderKanban, 
   BarChart3, 
   Users, 
+  UsersRound,
   Settings, 
   ChevronLeft,
   Sparkles
@@ -21,7 +22,8 @@ const Sidebar = ({ open, setOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/app/dashboard' },
     { icon: FolderKanban, label: 'Projects', path: '/app/projects' },
     { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
-    { icon: Users, label: 'Team', path: '/app/team' },
+    { icon: UsersRound, label: 'Teams', path: '/app/teams' },
+    { icon: Users, label: 'Members', path: '/app/team' },
     { icon: Settings, label: 'Settings', path: '/app/settings' },
   ];
 
