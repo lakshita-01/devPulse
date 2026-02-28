@@ -12,7 +12,8 @@ import {
   Sparkles,
   Clock,
   CheckCircle2,
-  Eye
+  Eye,
+  ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -51,7 +52,7 @@ const priorityOptions = [
   { value: 'urgent', label: 'Urgent', color: 'text-red-500' },
 ];
 
-const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
+const TaskCard = ({ task, onView, onUpdate, onDelete, members, isAdmin }) => {
   const priorityColor = priorityOptions.find(p => p.value === task.priority)?.color || '';
   const assignee = task.assignee;
 
@@ -64,7 +65,7 @@ const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
     >
       <Card className="p-4 bg-white hover:shadow-md transition-all cursor-move group" data-testid={`task-card-${task.id}`}>
         <div className="flex items-start justify-between mb-3">
-          <h4 className="font-semibold text-slate-900 text-sm line-clamp-2 flex-1">{task.title}</h4>
+          <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm line-clamp-2 flex-1">{task.title}</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -75,23 +76,27 @@ const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
               <DropdownMenuItem onClick={() => onView(task)}>
                 <Eye className="w-4 h-4 mr-2" /> View
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onUpdate(task)}>
-                <Edit2 className="w-4 h-4 mr-2" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem onClick={() => onUpdate(task)}>
+                    <Edit2 className="w-4 h-4 mr-2" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         {task.description && (
-          <p className="text-xs text-slate-600 mb-3 line-clamp-2">{task.description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3 line-clamp-2">{task.description}</p>
         )}
 
         {task.subtasks && task.subtasks.length > 0 && (
-          <div className="mb-3 p-2 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-1 text-xs text-slate-600 mb-1">
+          <div className="mb-3 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 mb-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} subtasks</span>
               {task.ai_generated && <Sparkles className="w-3 h-3 text-indigo-500 ml-1" />}
@@ -112,7 +117,7 @@ const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
             )}
           </div>
           {task.due_date && (
-            <div className="flex items-center gap-1 text-slate-500">
+            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
               <Clock className="w-3 h-3" />
               <span>{new Date(task.due_date).toLocaleDateString()}</span>
             </div>
@@ -126,7 +131,7 @@ const TaskCard = ({ task, onView, onUpdate, onDelete, members }) => {
 const KanbanBoard = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { token, workspaceId, API_URL } = useAuth();
+  const { token, workspaceId, API_URL, user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,6 +148,8 @@ const KanbanBoard = () => {
     due_date: '',
     generate_ai: false
   });
+
+  const isAdmin = members.find(m => m.user_id === user?.id)?.role === 'admin';
 
   const fetchTasks = async () => {
     if (!projectId || !workspaceId) return;
@@ -327,6 +334,7 @@ const KanbanBoard = () => {
           onClick={() => { resetForm(); setDialogOpen(true); }}
           className="bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
           data-testid="create-task-btn"
+          disabled={!isAdmin}
         >
           <Plus className="w-4 h-4 mr-2" />
           New Task
@@ -340,15 +348,15 @@ const KanbanBoard = () => {
           
           return (
             <div key={column.id} className="flex flex-col">
-              <div className={`${column.color} px-4 py-3 rounded-t-2xl border-b-2 border-slate-200`}>
-                <h3 className="font-semibold text-slate-900 flex items-center justify-between">
+              <div className={`${column.color} px-4 py-3 rounded-t-2xl border-b-2 border-slate-200 dark:border-slate-700">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
                   {column.label}
                   <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
                     {columnTasks.length}
                   </span>
                 </h3>
               </div>
-              <div className="bg-slate-50/50 p-4 rounded-b-2xl space-y-3 min-h-[500px]">
+              <div className="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-b-2xl space-y-3 min-h-[500px]">
                 {columnTasks.map(task => (
                   <TaskCard
                     key={task.id}
@@ -357,6 +365,7 @@ const KanbanBoard = () => {
                     onUpdate={openEditDialog}
                     onDelete={handleDeleteTask}
                     members={members}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -374,60 +383,60 @@ const KanbanBoard = () => {
           {viewingTask && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-600">Title</label>
-                <p className="text-slate-900 font-semibold mt-1">{viewingTask.title}</p>
+                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Title</label>
+                <p className="text-slate-900 dark:text-slate-100 font-semibold mt-1">{viewingTask.title}</p>
               </div>
               
               {viewingTask.description && (
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Description</label>
-                  <p className="text-slate-900 mt-1">{viewingTask.description}</p>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Description</label>
+                  <p className="text-slate-900 dark:text-slate-100 mt-1">{viewingTask.description}</p>
                 </div>
               )}
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Priority</label>
-                  <p className="text-slate-900 mt-1 capitalize">{viewingTask.priority}</p>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Priority</label>
+                  <p className="text-slate-900 dark:text-slate-100 mt-1 capitalize">{viewingTask.priority}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Status</label>
-                  <p className="text-slate-900 mt-1 capitalize">{viewingTask.status.replace('_', ' ')}</p>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Status</label>
+                  <p className="text-slate-900 dark:text-slate-100 mt-1 capitalize">{viewingTask.status.replace('_', ' ')}</p>
                 </div>
               </div>
               
               {viewingTask.assignee && (
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Assignee</label>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Assignee</label>
                   <div className="flex items-center gap-2 mt-1">
                     <img
                       src={viewingTask.assignee.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
                       alt={viewingTask.assignee.name}
                       className="w-6 h-6 rounded-full"
                     />
-                    <span className="text-slate-900">{viewingTask.assignee.name}</span>
+                    <span className="text-slate-900 dark:text-slate-100">{viewingTask.assignee.name}</span>
                   </div>
                 </div>
               )}
               
               {viewingTask.due_date && (
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Due Date</label>
-                  <p className="text-slate-900 mt-1">{new Date(viewingTask.due_date).toLocaleDateString()}</p>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Due Date</label>
+                  <p className="text-slate-900 dark:text-slate-100 mt-1">{new Date(viewingTask.due_date).toLocaleDateString()}</p>
                 </div>
               )}
               
               {viewingTask.subtasks && viewingTask.subtasks.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     Subtasks
                     {viewingTask.ai_generated && <Sparkles className="w-4 h-4 text-indigo-500" />}
                   </label>
                   <div className="mt-2 space-y-2">
                     {viewingTask.subtasks.map((subtask, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded">
                         <CheckCircle2 className={`w-4 h-4 ${subtask.completed ? 'text-emerald-500' : 'text-slate-300'}`} />
-                        <span className={`text-sm ${subtask.completed ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                        <span className={`text-sm ${subtask.completed ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
                           {subtask.title}
                         </span>
                       </div>
@@ -436,17 +445,40 @@ const KanbanBoard = () => {
                 </div>
               )}
               
+              <div>
+                <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">Change Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {statusColumns.map(status => (
+                    <Button
+                      key={status.id}
+                      variant={viewingTask.status === status.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        handleStatusChange(viewingTask.id, status.id);
+                        setViewingTask({ ...viewingTask, status: status.id });
+                        toast.success(`Status changed to ${status.label}`);
+                      }}
+                      className={viewingTask.status === status.id ? "bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white" : ""}
+                    >
+                      {status.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
               <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={() => {
-                    setViewDialogOpen(false);
-                    openEditDialog(viewingTask);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Task
-                </Button>
+                {isAdmin && (
+                  <Button
+                    onClick={() => {
+                      setViewDialogOpen(false);
+                      openEditDialog(viewingTask);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Task
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => setViewDialogOpen(false)}
@@ -497,7 +529,7 @@ const KanbanBoard = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Priority</label>
                 <Select value={taskForm.priority} onValueChange={(value) => setTaskForm({ ...taskForm, priority: value })}>
                   <SelectTrigger data-testid="task-priority-select" className="text-slate-900 dark:text-slate-100">
-                    <SelectValue className="text-slate-900 dark:text-slate-100" />
+                    <SelectValue placeholder="Select priority" className="text-slate-700 dark:text-slate-300" />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-slate-800">
                     {priorityOptions.map(opt => (
@@ -511,7 +543,7 @@ const KanbanBoard = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Assignee</label>
                 <Select value={taskForm.assignee_id} onValueChange={(value) => setTaskForm({ ...taskForm, assignee_id: value })}>
                   <SelectTrigger data-testid="task-assignee-select" className="text-slate-900 dark:text-slate-100">
-                    <SelectValue placeholder="Select assignee" className="text-slate-900 dark:text-slate-100" />
+                    <SelectValue placeholder="Select assignee" className="text-slate-700 dark:text-slate-300" />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-slate-800">
                     {members.map(member => (

@@ -9,7 +9,8 @@ import {
   UsersRound,
   Settings, 
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  CheckSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
@@ -21,6 +22,7 @@ const Sidebar = ({ open, setOpen }) => {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/app/dashboard' },
     { icon: FolderKanban, label: 'Projects', path: '/app/projects' },
+    { icon: CheckSquare, label: 'My Tasks', path: '/app/my-tasks' },
     { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
     { icon: UsersRound, label: 'Teams', path: '/app/teams' },
     { icon: Users, label: 'Members', path: '/app/team' },

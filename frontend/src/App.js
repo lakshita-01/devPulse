@@ -9,6 +9,7 @@ import KanbanBoard from './pages/KanbanBoard';
 import Analytics from './pages/Analytics';
 import TeamManagement from './pages/TeamManagement';
 import Teams from './pages/Teams';
+import MyTasks from './pages/MyTasks';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -49,6 +50,7 @@ function AppRoutes() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/projects/:projectId" element={<KanbanBoard />} />
+                  <Route path="/my-tasks" element={<MyTasks />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/teams" element={<Teams />} />
                   <Route path="/team" element={<TeamManagement />} />
