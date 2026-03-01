@@ -348,7 +348,7 @@ const KanbanBoard = () => {
           
           return (
             <div key={column.id} className="flex flex-col">
-              <div className={`${column.color} px-4 py-3 rounded-t-2xl border-b-2 border-slate-200 dark:border-slate-700">
+              <div className={`${column.color} px-4 py-3 rounded-t-2xl border-b-2 border-slate-200 dark:border-slate-700`}>
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
                   {column.label}
                   <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
