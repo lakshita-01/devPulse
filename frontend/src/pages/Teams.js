@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Plus, Edit2 } from 'lucide-react';
 import axios from 'axios';
@@ -20,7 +20,7 @@ const Teams = () => {
   const [teamForm, setTeamForm] = useState({ name: '', description: '', member_ids: [] });
   const { token, workspaceId, API_URL } = useAuth();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!workspaceId) return;
     
     setLoading(true);
@@ -41,12 +41,11 @@ const Teams = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workspaceId, API_URL, token]);
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId]);
+  }, [fetchData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
