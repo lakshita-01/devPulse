@@ -28,27 +28,37 @@ const Projects = () => {
   const [projectTasks, setProjectTasks] = useState([]);
   const [expandedTasks, setExpandedTasks] = useState({});
   const [newProject, setNewProject] = useState({ name: '', description: '' });
-  const { token, workspaceId, API_URL } = useAuth();
+  const [members, setMembers] = useState([]);
+  const { token, workspaceId, API_URL, user } = useAuth();
   const navigate = useNavigate();
 
-  const fetchProjects = async () => {
+  // Check if current user is admin
+  const isAdmin = members.some(m => m.user_id === user?.id && m.role === 'admin');
+
+  const fetchData = async () => {
     if (!workspaceId) return;
-    
+
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/projects/${workspaceId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setProjects(response.data);
+      const [projectsRes, membersRes] = await Promise.all([
+        axios.get(`${API_URL}/api/projects/${workspaceId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/api/workspaces/${workspaceId}/members`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setProjects(projectsRes.data);
+      setMembers(membersRes.data.members || []);
     } catch (error) {
-      toast.error('Failed to load projects');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProjects();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
 
@@ -115,22 +125,33 @@ const Projects = () => {
 
   const handleSubtaskToggle = async (taskId, subtaskIndex) => {
     const task = projectTasks.find(t => t.id === taskId);
-    const updatedSubtasks = task.subtasks.map((st, idx) => 
+    if (!task || !task.subtasks) {
+      console.error('Task or subtasks not found:', { task, subtaskIndex });
+      toast.error('Task not found');
+      return;
+    }
+
+    const updatedSubtasks = task.subtasks.map((st, idx) =>
       idx === subtaskIndex ? { ...st, completed: !st.completed } : st
     );
 
     try {
-      await axios.patch(
+      console.log('Updating subtask:', { taskId, updatedSubtasks });
+      const response = await axios.patch(
         `${API_URL}/api/tasks/${taskId}`,
         { subtasks: updatedSubtasks },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProjectTasks(projectTasks.map(t => 
-        t.id === taskId ? { ...t, subtasks: updatedSubtasks } : t
+      console.log('Subtask update response:', response.data);
+      setProjectTasks(projectTasks.map(t =>
+        t.id === taskId ? response.data.task : t
       ));
       toast.success('Subtask updated!');
     } catch (error) {
-      toast.error('Failed to update subtask');
+      console.error('Subtask update error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Failed to update subtask';
+      console.error('Error detail:', errorMsg);
+      toast.error(`Failed to update subtask: ${errorMsg}`);
     }
   };
 

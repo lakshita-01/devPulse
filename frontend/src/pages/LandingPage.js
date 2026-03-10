@@ -25,6 +25,7 @@ const LandingPage = () => {
             <span className="font-display font-bold text-xl bg-gradient-to-r from-[hsl(0,86%,56%)] to-[hsl(177,100%,45%)] bg-clip-text text-transparent">
               DevPulse
             </span>
+            <div className="badge badge-primary badge-outline ml-2">v0.1</div>
           </div>
           <Button
             onClick={() => navigate('/auth')}

@@ -887,11 +887,11 @@ async def update_task(task_id: str, task_update: TaskUpdate, user: dict = Depend
     task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     await verify_workspace_access(user, task["workspace_id"])
-    
+
     update_data = {k: v for k, v in task_update.dict(exclude_unset=True).items() if v is not None}
-    
+
     # Convert enums to strings
     if "status" in update_data:
         update_data["status"] = update_data["status"].value
@@ -901,16 +901,16 @@ async def update_task(task_id: str, task_update: TaskUpdate, user: dict = Depend
         update_data["due_date"] = update_data["due_date"].isoformat()
     if "subtasks" in update_data:
         update_data["subtasks"] = [s.dict() for s in update_data["subtasks"]]
-    
+
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    
+
     await db.tasks.update_one(
         {"id": task_id},
         {"$set": update_data}
     )
-    
+
     updated_task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
-    
+
     # Populate assignee
     if updated_task.get("assignee_id"):
         assignee = await db.users.find_one(
@@ -919,13 +919,13 @@ async def update_task(task_id: str, task_update: TaskUpdate, user: dict = Depend
         )
         if assignee:
             updated_task["assignee"] = serialize_doc(assignee)
-    
+
     # Broadcast to workspace
     await manager.broadcast_to_workspace(task["workspace_id"], {
         "type": "task_updated",
         "task": serialize_doc(updated_task)
     })
-    
+
     return {"task": serialize_doc(updated_task)}
 
 @api_router.delete("/tasks/{task_id}")

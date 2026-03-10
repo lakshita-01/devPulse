@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Clock, Flag, Eye, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Flag, Eye, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -22,19 +22,29 @@ const MyTasks = () => {
   const [loading, setLoading] = useState(true);
   const [viewingTask, setViewingTask] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [members, setMembers] = useState([]);
   const { token, workspaceId, API_URL, user } = useAuth();
   const navigate = useNavigate();
 
-  const fetchMyTasks = async () => {
+  // Check if current user is admin
+  const isAdmin = members.find(m => m.user_id === user?.id)?.role === 'admin';
+
+  const fetchData = async () => {
     if (!workspaceId) return;
-    
+
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/tasks/${workspaceId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const myTasks = response.data.tasks.filter(t => t.assignee_id === user?.id);
+      const [tasksRes, membersRes] = await Promise.all([
+        axios.get(`${API_URL}/api/tasks/${workspaceId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/api/workspaces/${workspaceId}/members`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      const myTasks = tasksRes.data.tasks.filter(t => t.assignee_id === user?.id);
       setTasks(myTasks);
+      setMembers(membersRes.data.members || []);
     } catch (error) {
       toast.error('Failed to load tasks');
     } finally {
@@ -43,18 +53,28 @@ const MyTasks = () => {
   };
 
   useEffect(() => {
-    fetchMyTasks();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
 
   const handleStatusChange = async (taskId, newStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Check if user is authorized (assignee or admin)
+    const isAssignee = task.assignee_id === user?.id;
+    if (!isAssignee && !isAdmin) {
+      toast.error('You do not have permission to update this task');
+      return;
+    }
+
     try {
       const response = await axios.patch(
         `${API_URL}/api/tasks/${taskId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setTasks(tasks.map(t => t.id === taskId ? response.data.task : t));
       if (viewingTask?.id === taskId) {
         setViewingTask(response.data.task);
@@ -68,6 +88,38 @@ const MyTasks = () => {
   const openViewDialog = (task) => {
     setViewingTask(task);
     setViewDialogOpen(true);
+  };
+
+  const handleSubtaskToggle = async (taskId, subtaskIndex) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    // Check if user is authorized (assignee or admin)
+    const isAssignee = task.assignee_id === user?.id;
+    if (!isAssignee && !isAdmin) {
+      toast.error('You do not have permission to update this task');
+      return;
+    }
+
+    const updatedSubtasks = task.subtasks.map((st, idx) =>
+      idx === subtaskIndex ? { ...st, completed: !st.completed } : st
+    );
+
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/tasks/${taskId}`,
+        { subtasks: updatedSubtasks },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setTasks(tasks.map(t => t.id === taskId ? response.data.task : t));
+      if (viewingTask?.id === taskId) {
+        setViewingTask(response.data.task);
+      }
+      toast.success('Subtask updated!');
+    } catch (error) {
+      toast.error('Failed to update subtask');
+    }
   };
 
   if (loading) {
@@ -195,11 +247,34 @@ const MyTasks = () => {
               
               {viewingTask.subtasks && viewingTask.subtasks.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Subtasks</label>
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Subtasks
+                    {!isAdmin && viewingTask.assignee_id !== user?.id && (
+                      <span className="block text-xs text-orange-600 mt-1">
+                        ⚠️ Only the assignee or admin can update subtasks
+                      </span>
+                    )}
+                  </label>
                   <div className="mt-2 space-y-2">
                     {viewingTask.subtasks.map((subtask, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded">
-                        <CheckCircle2 className={`w-4 h-4 ${subtask.completed ? 'text-emerald-500' : 'text-slate-300'}`} />
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded transition-colors ${
+                          isAdmin || viewingTask.assignee_id === user?.id
+                            ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700'
+                            : 'cursor-not-allowed opacity-60'
+                        }`}
+                        onClick={() => {
+                          if (isAdmin || viewingTask.assignee_id === user?.id) {
+                            handleSubtaskToggle(viewingTask.id, idx);
+                          }
+                        }}
+                      >
+                        {subtask.completed ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className="w-4 h-4 text-slate-300 flex-shrink-0" />
+                        )}
                         <span className={`text-sm ${subtask.completed ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
                           {subtask.title}
                         </span>
@@ -210,7 +285,14 @@ const MyTasks = () => {
               )}
               
               <div>
-                <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">Change Status</label>
+                <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">
+                  Change Status
+                  {!isAdmin && viewingTask.assignee_id !== user?.id && (
+                    <span className="block text-xs text-orange-600 mt-1">
+                      ⚠️ Only the assignee or admin can update status
+                    </span>
+                  )}
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   {statusColumns.map(status => (
                     <Button
@@ -219,6 +301,7 @@ const MyTasks = () => {
                       size="sm"
                       onClick={() => handleStatusChange(viewingTask.id, status.id)}
                       className={viewingTask.status === status.id ? "bg-gradient-to-r from-[hsl(0,86%,66%)] to-[hsl(177,100%,55%)] text-white" : ""}
+                      disabled={!isAdmin && viewingTask.assignee_id !== user?.id}
                     >
                       {status.label}
                     </Button>
